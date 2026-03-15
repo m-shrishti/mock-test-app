@@ -1,6 +1,8 @@
 "use client";
+import { useSelector, useDispatch } from "react-redux";
+import { startTimer, tick } from "../store/timerSlice";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { questions } from "../data/question";
 
 const VolumeIcon = () => (
@@ -15,15 +17,48 @@ export default function Home() {
   const [hasStarted, setHasStarted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState([]);
+  const [showAnswer, setShowAnswer] = useState(false);
+  const dispatch = useDispatch();
+  const timeLeft = useSelector((state) => state.timer.timeLeft);
+  const isRunning = useSelector((state) => state.timer.isRunning);
 
+  useEffect(() => {
+    if (!isRunning) return;
+
+    const interval = setInterval(() => {
+      dispatch(tick());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isRunning, dispatch]);
+
+  useEffect(() => {
+    if (timeLeft === 0) {
+      alert("Time is up! Test finished.");
+      setHasStarted(false);
+      setCurrentQuestion(0);
+    }
+  }, [timeLeft]);
+
+  const handleCheckAnswer = () => {
+    setShowAnswer(true);
+  };
   const handleNext = () => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedOptions([]);
+      setShowAnswer(false);
     } else {
       alert("Test Finished!");
       setHasStarted(false);
       setCurrentQuestion(0);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1);
+      setSelectedOptions([]);
     }
   };
 
@@ -39,7 +74,10 @@ export default function Home() {
     return (
       <div className="flex h-screen items-center justify-center bg-white">
         <button
-          onClick={() => setHasStarted(true)}
+          onClick={() => {
+            setHasStarted(true);
+            dispatch(startTimer());
+          }}
           className="bg-[#29C2D6] hover:bg-[#24aabf] text-white font-bold py-3 px-24 rounded-lg text-2xl shadow-sm transition-colors"
         >
           Begin Test
@@ -54,10 +92,14 @@ export default function Home() {
     <div className="min-h-screen bg-white text-gray-900 font-sans flex justify-center py-8">
       <div className="w-full max-w-5xl px-8 flex flex-col">
         {/* Header */}
-        <div className="flex justify-between items-end mb-4">
+        <div className="flex justify-between items-center mb-4">
           <h2 className="text-[17px] font-medium text-gray-800">
             Question {currentQuestion + 1} of {questions.length}
           </h2>
+
+          <div className="text-lg font-semibold text-red-500">
+            Time Left: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
+          </div>
         </div>
 
         {/* Question Box */}
@@ -94,13 +136,49 @@ export default function Home() {
               </button>
             </div>
           ))}
+          {showAnswer && (
+            <div className="mt-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+              <p className="text-sm text-gray-700 mb-2">
+                <span className="font-semibold">Category:</span> {question.category}
+              </p>
+
+              <p className="text-sm text-gray-700">
+                <span className="font-semibold">Explanation:</span> {question.explanation}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-16 flex justify-end items-center">
+        <div className="mt-16 flex justify-between items-center">
+          <button
+            onClick={handlePrevious}
+            disabled={currentQuestion === 0}
+            className={`text-white font-medium py-2.5 px-10 rounded-lg text-sm transition-colors
+  ${currentQuestion === 0
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#aaaaaa] hover:bg-gray-500"}`}
+          >
+            Previous
+          </button>
+
+          <button
+            onClick={handleCheckAnswer}
+            disabled={selectedOptions.length === 0}
+            className={`text-white font-medium py-2.5 px-10 rounded-lg text-sm transition-colors
+          ${selectedOptions.length === 0
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#aaaaaa] hover:bg-gray-500"}`}
+          >
+            Check Answer
+          </button>
           <button
             onClick={handleNext}
-            className="bg-[#aaaaaa] hover:bg-gray-500 text-white font-medium py-2.5 px-10 rounded-lg text-sm transition-colors ml-4"
+            disabled={selectedOptions.length === 0}
+            className={`text-white font-medium py-2.5 px-10 rounded-lg text-sm transition-colors
+  ${selectedOptions.length === 0
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#aaaaaa] hover:bg-gray-500"}`}
           >
             Next
           </button>
