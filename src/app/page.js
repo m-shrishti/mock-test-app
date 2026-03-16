@@ -120,8 +120,16 @@ export default function Home() {
           {question.options.map((option, index) => (
             <div
               key={index}
-              onClick={() => toggleOption(index)}
-              className="flex items-center justify-between px-4 py-3 bg-[#f2f4f6] rounded-lg cursor-pointer hover:bg-[#e2e5e8] transition-colors"
+              onClick={() => !showAnswer && toggleOption(index)}
+              className={`flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer transition-colors
+              ${showAnswer
+                  ? question.correctOptions.includes(option)
+                    ? "bg-green-200"
+                    : selectedOptions.includes(index)
+                      ? "bg-red-200"
+                      : "bg-[#f2f4f6]"
+                  : "bg-[#f2f4f6] hover:bg-[#e2e5e8]"
+                }`}
             >
               <div className="flex items-center space-x-4">
                 <div className={`w-[22px] h-[22px] flex-shrink-0 border flex items-center justify-center bg-white ${selectedOptions.includes(index) ? 'border-gray-800' : 'border-gray-800'}`}>
@@ -150,12 +158,12 @@ export default function Home() {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-16 flex justify-between items-center">
+        <div className="mt-16 flex flex-col gap-3 md:flex-row   md:justify-between md:items-center">
           <button
             onClick={handlePrevious}
             disabled={currentQuestion === 0}
-            className={`text-white font-medium py-2.5 px-10 rounded-lg text-sm transition-colors
-  ${currentQuestion === 0
+            className={`w-full md:w-auto text-white font-medium py-2.5 px-10 rounded-lg text-sm transition-colors
+${currentQuestion === 0
                 ? "bg-gray-300 cursor-not-allowed"
                 : "bg-[#aaaaaa] hover:bg-gray-500"}`}
           >
@@ -165,8 +173,8 @@ export default function Home() {
           <button
             onClick={handleCheckAnswer}
             disabled={selectedOptions.length === 0}
-            className={`text-white font-medium py-2.5 px-10 rounded-lg text-sm transition-colors
-          ${selectedOptions.length === 0
+            className={`w-full md:w-auto text-white font-medium py-2.5 px-10 rounded-lg text-sm transition-colors
+${currentQuestion === 0
                 ? "bg-gray-300 cursor-not-allowed"
                 : "bg-[#aaaaaa] hover:bg-gray-500"}`}
           >
@@ -175,8 +183,8 @@ export default function Home() {
           <button
             onClick={handleNext}
             disabled={selectedOptions.length === 0}
-            className={`text-white font-medium py-2.5 px-10 rounded-lg text-sm transition-colors
-  ${selectedOptions.length === 0
+            className={`w-full md:w-auto text-white font-medium py-2.5 px-10 rounded-lg text-sm transition-colors
+${currentQuestion === 0
                 ? "bg-gray-300 cursor-not-allowed"
                 : "bg-[#aaaaaa] hover:bg-gray-500"}`}
           >
