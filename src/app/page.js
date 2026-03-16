@@ -4,6 +4,7 @@ import { startTimer, tick } from "../store/timerSlice";
 
 import { useState, useEffect } from "react";
 import { questions } from "../data/question";
+import { useRouter } from "next/navigation";
 
 const VolumeIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#105b9b]">
@@ -17,6 +18,8 @@ export default function Home() {
   const [hasStarted, setHasStarted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState([]);
+  const [answers, setAnswers] = useState({});
+  const router = useRouter();
   const [showAnswer, setShowAnswer] = useState(false);
   const dispatch = useDispatch();
   const timeLeft = useSelector((state) => state.timer.timeLeft);
@@ -44,6 +47,12 @@ export default function Home() {
     setShowAnswer(true);
   };
   const handleNext = () => {
+
+    setAnswers((prev) => ({
+      ...prev,
+      [currentQuestion]: selectedOptions
+    }));
+
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedOptions([]);
@@ -55,10 +64,24 @@ export default function Home() {
     }
   };
 
+  const handleFinishTest = () => {
+
+    const finalAnswers = {
+      ...answers,
+      [currentQuestion]: selectedOptions
+    };
+
+    localStorage.setItem("mockTestAnswers", JSON.stringify(finalAnswers));
+
+    router.push("/result");
+  };
+
   const handlePrevious = () => {
     if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
-      setSelectedOptions([]);
+      const prevQuestion = currentQuestion - 1;
+
+      setCurrentQuestion(prevQuestion);
+      setSelectedOptions(answers[prevQuestion] || []);
     }
   };
 
@@ -184,11 +207,19 @@ ${currentQuestion === 0
             onClick={handleNext}
             disabled={selectedOptions.length === 0}
             className={`w-full md:w-auto text-white font-medium py-2.5 px-10 rounded-lg text-sm transition-colors
-${currentQuestion === 0
+  ${selectedOptions.length === 0
                 ? "bg-gray-300 cursor-not-allowed"
-                : "bg-[#aaaaaa] hover:bg-gray-500"}`}
+                : "bg-[#aaaaaa] hover:bg-gray-500"
+              }`}
           >
             Next
+          </button>
+
+          <button
+            onClick={handleFinishTest}
+            className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-10 rounded-lg text-sm"
+          >
+            Finish Test
           </button>
         </div>
       </div>
